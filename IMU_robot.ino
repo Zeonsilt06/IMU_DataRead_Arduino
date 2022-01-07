@@ -6,13 +6,14 @@ float accelerometer_x, accelerometer_y, accelerometer_z; // variables for accele
 float gyro_x, gyro_y, gyro_z; // variables for gyro raw data
 float gyro_CM, gyro_PM, elapsedTime; //gyro angle loop parameter
 float gyroAngle_x,gyroAngle_y,gyroAngle_z; // variables for gyro angle;
-float gyroCal_x, gyroCal_y, gyroCal_z;
-float accelerometerCal_x,accelerometerCal_y,accelerometerCal_z;
+float gyroCal_x, gyroCal_y, gyroCal_z; // variables for gyro calibration
+float accelerometerCal_x,accelerometerCal_y,accelerometerCal_z; // variables for accelerometer calibration
+float accelAngle_x,accelAngle_y; //variables for Accelerometer angle
 int cal; 
 
 void setup() {
   Serial.begin(115200);
-  Wire.begin();
+  Wire.begin();//begin I2C connection
   Wire.beginTransmission(MPU_ADDR); // Begins a transmission to the I2C slave (GY-521 board)
   Wire.write(0x6B); // PWR_MGMT_1 register
   Wire.write(0x00); // set to zero (wakes up the MPU-6050)
@@ -35,6 +36,7 @@ void loop() {
   IMU_data_read();
 }
 
+//function to read IMU data and convert it to Pitch, Yaw, Roll angle
 void IMU_data_read(){
 
       Wire.beginTransmission(MPU_ADDR);
@@ -48,6 +50,9 @@ void IMU_data_read(){
       accelerometer_x = accelerometerCal_x - accelerometer_x;
       accelerometer_y = accelerometerCal_y - accelerometer_y;
       accelerometer_z = accelerometerCal_z - accelerometer_z;
+
+      accelAngle_x = atan(accelerometer_x/sqrt(pow(accelerometer_y,2) + pow(accelerometer_z,2)))*180/PI;
+      accelAngle_y = atan(accelerometer_y/sqrt(pow(accelerometer_x,2) + pow(accelerometer_z,2)))*180/PI;
 
       Wire.beginTransmission(MPU_ADDR);
       Wire.write(0x43); // starting with register 0x3B (ACCEL_XOUT_H) [MPU-6000 and MPU-6050 Register Map and Descriptions Revision 4.2, p.40]
@@ -81,6 +86,7 @@ void IMU_data_read(){
       Serial.println();
 }
 
+//function for calibrating IMU raw data
 void IMU_calibration(){
       
       Wire.beginTransmission(MPU_ADDR);
