@@ -55,20 +55,21 @@ void IMU_data_read(){
       //calculate accelerometer angle from accelerometer data
       accelAngle_x = atan(accelerometer_x/sqrt(pow(accelerometer_y,2) + pow(accelerometer_z,2)))*180/PI;
       accelAngle_y = atan(accelerometer_y/sqrt(pow(accelerometer_x,2) + pow(accelerometer_z,2)))*180/PI;
-
+      
+      //Accelerometer angle correction
       accelAngle_x = accelAngleCal_x - accelAngle_x;
       accelAngle_y = accelAngleCal_y - accelAngle_y;
 
       //read gyro raw data
       Wire.beginTransmission(MPU_ADDR);
-      Wire.write(0x43); // starting with register 0x3B (ACCEL_XOUT_H) [MPU-6000 and MPU-6050 Register Map and Descriptions Revision 4.2, p.40]
+      Wire.write(0x43); // starting with register 0x43 (GYRO_XOUT_H) [MPU-6000 and MPU-6050 Register Map and Descriptions Revision 4.2, p.40]
       Wire.endTransmission(false); // the parameter indicates that the Arduino will send a restart. As a result, the connection is kept active.
       Wire.requestFrom(MPU_ADDR, 6, true); // request a total of 6 registers
       gyro_x = (Wire.read()<<8 | Wire.read())/131.0; // reading registers: 0x43 (GYRO_XOUT_H) and 0x44 (GYRO_XOUT_L)
       gyro_y = (Wire.read()<<8 | Wire.read())/131.0; // reading registers: 0x45 (GYRO_YOUT_H) and 0x46 (GYRO_YOUT_L)
       gyro_z = (Wire.read()<<8 | Wire.read())/131.0; // reading registers: 0x47 (GYRO_ZOUT_H) and 0x48 (GYRO_ZOUT_L)
       
-      //accelerometer data correction  
+      //gyro data correction  
       gyro_x = gyroCal_x - gyro_x;
       gyro_y = gyroCal_y - gyro_y;
       gyro_z = gyroCal_z - gyro_z;
@@ -82,8 +83,8 @@ void IMU_data_read(){
       gyroAngle_z = gyroAngle_z + gyro_z*elapsedTime;
 
       //complementary filter to combine Gyro and Accelerometer data
-      pitchFilter = 0.98*gyroAngle_x + 0.02*accelAngle_y;
-      rollFilter = 0.98*gyroAngle_y + 0.02*accelAngle_x;
+      pitchFilter = 0.98*gyroAngle_y + 0.02*accelAngle_y;
+      rollFilter = 0.98*gyroAngle_x + 0.02*accelAngle_x;
 
       // Print out data. Uncomment if you want to debug these parameter
 //      Serial.print("aX = "); Serial.print(accelerometer_x);
@@ -120,7 +121,7 @@ void IMU_calibration(){
 
       //read gyro raw data
       Wire.beginTransmission(MPU_ADDR);
-      Wire.write(0x43); // starting with register 0x3B (ACCEL_XOUT_H) [MPU-6000 and MPU-6050 Register Map and Descriptions Revision 4.2, p.40]
+      Wire.write(0x43); // starting with register 0x43 (GYRO_XOUT_H) [MPU-6000 and MPU-6050 Register Map and Descriptions Revision 4.2, p.40]
       Wire.endTransmission(false); // the parameter indicates that the Arduino will send a restart. As a result, the connection is kept active.
       Wire.requestFrom(MPU_ADDR, 6, true); // request a total of 6 registers
       gyro_x = (Wire.read()<<8 | Wire.read())/131.0; // reading registers: 0x43 (GYRO_XOUT_H) and 0x44 (GYRO_XOUT_L)
